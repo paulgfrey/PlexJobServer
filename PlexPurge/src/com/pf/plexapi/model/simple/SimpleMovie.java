@@ -8,7 +8,8 @@ public class SimpleMovie {
 	private String libraryKey = null;
 	private String movieKey = null;
 	private String mediaFile = null;
-	private String netflixId = null;
+	//private String netflixId = null;
+	private boolean netflix = false;
 	private boolean amazonPrime = false;
 	
 	public SimpleMovie() {
@@ -72,13 +73,15 @@ public class SimpleMovie {
 	public String toString() {
 		return "title=" + title + 
 				"|year=" + year + "|movieId=" + movieId + 
-				"|netflixId=" + netflixId + 
+				//"|netflixId=" + netflixId + 
+				"|netflix=" + netflix +
 				"|libraryKey=" + libraryKey + 
 				"|movieKey=" + movieKey + 
 				"|mediaFile=" + mediaFile + 
 				"|amazonPrime=" + amazonPrime + "|";
 	}
 
+	/*
 	public String getNetflixId() {
 		return netflixId;
 	}
@@ -86,6 +89,7 @@ public class SimpleMovie {
 	public void setNetflixId(String netflixId) {
 		this.netflixId = netflixId;
 	}
+	*/
 
 	public boolean isAmazonPrime() {
 		return amazonPrime;
@@ -101,5 +105,13 @@ public class SimpleMovie {
 
 	public void setSource(Source source) {
 		this.source = source;
+	}
+
+	public boolean isNetflix() {
+		return netflix;
+	}
+
+	public void setNetflix(boolean netflix) {
+		this.netflix = netflix;
 	}
 }

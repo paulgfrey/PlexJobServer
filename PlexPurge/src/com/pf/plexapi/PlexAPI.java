@@ -9,6 +9,8 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import com.pf.canistreamit.api.CanIStreamItAPI;
+import com.pf.canistreamit.api.CanIStreamItAPIException;
 import com.pf.guidebox.GuideBoxAPI;
 import com.pf.guidebox.GuideBoxAPIException;
 import com.pf.netflix.api.NetflixAPI;
@@ -148,12 +150,22 @@ public class PlexAPI {
 			setAmazonPrimeSwitch(saveAmazonPrimeSwitch);
 		}
 		if(isNetflixSwitch() && movie != null) {
+			/*
 			NetflixAPI netflixAPI = new NetflixAPI();
 			try {
 				movie.setNetflixId(netflixAPI.getNetflixId(movie));
 			} catch (NetflixAPIException e) {
 				throw(new PlexAPIException("Unable to get Netflix ID for file " + 
 											movieFile + "!", e));
+			}
+			*/
+			CanIStreamItAPI canIStreamItAPI = new CanIStreamItAPI();
+			try {
+				movie.setNetflix(canIStreamItAPI.isNetflixStreamable(movie));
+			}
+			catch (CanIStreamItAPIException e) {
+				throw(new PlexAPIException("Unable to determine if netflix streamable for file " + 
+						movieFile + "!", e));
 			}
 		}
 		if(isAmazonPrimeSwitch() && movie != null) {
@@ -202,12 +214,22 @@ public class PlexAPI {
 				}
 			}
 			if(isNetflixSwitch()) {
+				/*
 				NetflixAPI netflixAPI = new NetflixAPI();
 				try {
 					tmpSimpleMovie.setNetflixId(netflixAPI.getNetflixId(tmpSimpleMovie));
 				} catch (NetflixAPIException e) {
 					throw(new PlexAPIException("Unable to get Netflix ID for movie " + 
 												tmpSimpleMovie + "!", e));
+				}
+				*/
+				CanIStreamItAPI canIStreamItAPI = new CanIStreamItAPI();
+				try {
+					tmpSimpleMovie.setNetflix(canIStreamItAPI.isNetflixStreamable(tmpSimpleMovie));
+				}
+				catch (CanIStreamItAPIException e) {
+					throw(new PlexAPIException("Unable to determine if netflix streamable for file " + 
+							tmpSimpleMovie + "!", e));
 				}
 			}
 			if(isAmazonPrimeSwitch()) {
