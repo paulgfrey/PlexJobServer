@@ -52,7 +52,7 @@ public class CanIStreamItAPI {
 		Movie movie = doMovieSearch(simpleMovie);
 		// Now do a streamable search
 		if(movie != null) {
-			rtnVal = findStreamingType(movie, "netflix");
+			rtnVal = findStreamingType(movie, "netflix_instant");
 		}
 		
 		return(rtnVal);
@@ -79,16 +79,18 @@ public class CanIStreamItAPI {
 			    	else {
 			    		guideBoxMovie = guideBoxAPI.getMovieByMovieDb(simpleMovie.getMovieId());	
 			    	}
-			    	simpleMovie.setTitle(guideBoxMovie.getTitle());
+			    	// If there is no title from GuideBox then just move forward with the Plex title.
+			    	if(guideBoxMovie != null && guideBoxMovie.getTitle() != null) {
+				    	simpleMovie.setTitle(guideBoxMovie.getTitle());
+			    	}
 		    	}
 		    	HttpGet httpGet = new HttpGet(MOVIE_SEARCH_URL + "?movieName=" 
 		    							+ URLEncoder.encode(simpleMovie.getTitle()));
-				logger.debug("Executing " + MOVIE_SEARCH_URL + "?movieName=" 
-								+ URLEncoder.encode(simpleMovie.getTitle()));
+				logger.debug("Executing " + httpGet.toString());
 		    	response = httpClient.execute(httpGet);
 				Movie[] canIStreamItMovieArr = gson.fromJson(new InputStreamReader(response.getEntity().getContent()), Movie[].class);
 				if(canIStreamItMovieArr != null && response.getStatusLine().getStatusCode() == 200) {
-					logger.debug("canIStreamItMovieArr=" + canIStreamItMovieArr);
+					logger.debug("canIStreamItMovieArr=" + Arrays.asList(canIStreamItMovieArr));
 					// There will be a list of movies and some might have the same name so check the year
 					for(Movie cmovie: Arrays.asList(canIStreamItMovieArr)) {
 						if(cmovie.getTitle().equalsIgnoreCase(simpleMovie.getTitle())) {
@@ -156,11 +158,10 @@ public class CanIStreamItAPI {
 		    HttpResponse response = null;
 		    try {
 		    	HttpGet httpGet = new HttpGet(MOVIE_QUERY_URL + "?movieId=" 
-		    							+ URLEncoder.encode(canIStreamItMovie.getId()));
-				logger.debug("Executing " + MOVIE_QUERY_URL + "?movieId=" 
-										+ URLEncoder.encode(canIStreamItMovie.getId())
+		    							+ URLEncoder.encode(canIStreamItMovie.getId())
 										+ "&attributes=1"
-										+ "mediaType=streaming");
+										+ "&mediaType=streaming");
+				logger.debug("Executing " + httpGet.toString());
 		    	response = httpClient.execute(httpGet);
 		    	String jsonResp = response2Str(response);
 				if(jsonResp != null && response.getStatusLine().getStatusCode() == 200) {
