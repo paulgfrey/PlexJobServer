@@ -2,6 +2,9 @@ package com.pf.plexapi.model.movies;
 
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
+
+import java.util.List;
+
 import com.pf.plexapi.model.movies.Collection;
 
 public class Video
@@ -42,7 +45,8 @@ public class Video
 	@XStreamAsAttribute
 	private String originallyAvailableAt;
 
-    private Media Media;
+	@XStreamImplicit(itemFieldName="Media")
+    private List<Media> Media;
 
 	@XStreamAsAttribute
 	private String chapterSource;
@@ -205,12 +209,12 @@ public class Video
         this.originallyAvailableAt = originallyAvailableAt;
     }
 
-    public Media getMedia ()
+    public List<Media> getMedia ()
     {
         return Media;
     }
 
-    public void setMedia (Media Media)
+    public void setMedia (List<Media> Media)
     {
         this.Media = Media;
     }

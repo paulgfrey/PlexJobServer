@@ -23,6 +23,7 @@ import com.pf.plexapi.model.movies.Video;
 import com.pf.plexapi.model.simple.SimpleMovie;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.DomDriver;
+import com.thoughtworks.xstream.mapper.MapperWrapper;
 
 public class PlexAPI {
 	private Logger logger = Logger.getLogger(getClass());
@@ -196,11 +197,18 @@ public class PlexAPI {
 			tmpSimpleMovie.setMovieKey(tmpVideo.getKey());
 			tmpSimpleMovie.setTitle(tmpVideo.getTitle());
 			tmpSimpleMovie.setYear(tmpVideo.getYear());
-			tmpSimpleMovie.setMediaFile(tmpVideo.getMedia().getPart().get(0).getFile());
+			if(tmpVideo.getMedia().size() > 1) {
+				logger.warn("There were more than 2 media files for " + tmpVideo.getTitle());
+			}
+			tmpSimpleMovie.setMediaFile(tmpVideo.getMedia().get(0).getPart().get(0).getFile());
 			
 			tmpMovieItem = getMovie(tmpVideo.getKey());
 			// extract IMDB ID
 			String guid = tmpMovieItem.getMediaContainer().getVideo().getGuid();
+			if(guid == null) {
+				logger.warn("The PLEX movie " + tmpMovieItem + " was missing Video.guid! Skipping.");
+				continue;
+			}
 			// example: com.plexapp.agents.imdb://tt3682448?lang=en
 			int startNdx = guid.lastIndexOf("/");
 			int endNdx = guid.lastIndexOf("?");

@@ -1,6 +1,7 @@
 package com.pf.plexapi.model.movies;
 
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
+import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
 public class Part
 {
@@ -33,7 +34,10 @@ public class Part
 
 	@XStreamAsAttribute
 	private String size;
-
+	
+	@XStreamOmitField
+	private Object Stream;
+	
     public String getId ()
     {
         return id;
