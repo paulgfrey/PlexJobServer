@@ -3,3 +3,80 @@
 *.log.*
 *.class
 */classes
+/target/
+/keystore/
+.metadata
+bin/
+tmp/
+config/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+.recommenders
+
+# External tool builders
+.externalToolBuilders/
+
+# Locally stored "Eclipse launch configurations"
+*.launch
+
+# PyDev specific (Python IDE for Eclipse)
+*.pydevproject
+
+# CDT-specific (C/C++ Development Tooling)
+.cproject
+
+# Java annotation processor (APT)
+.factorypath
+
+# PDT-specific (PHP Development Tools)
+.buildpath
+
+# sbteclipse plugin
+.target
+
+# Tern plugin
+.tern-project
+
+# TeXlipse plugin
+.texlipse
+
+# STS (Spring Tool Suite)
+.springBeans
+
+# Code Recommenders
+.recommenders/
+
+# Scala IDE specific (Scala & Java development for Eclipse)
+.cache-main
+.scala_dependencies
+.worksheet
+
+# Eclipse
+.classpath
+.project
+.settings/
+ 
+# Intellij
+.idea/
+*.iml
+*.iws
+ 
+# Mac
+.DS_Store
+ 
+# Maven
+log/
+target/
+/dependency-reduced-pom.xml
+/lastIPAddress.dat
+/convBufferedImageMat.jpg
+/debug_INSTARCAM_image.jpg
+/INSTARCAM_gray.jpg
+/INSTARCAM_lightAdjusted.jpg
+/trackMovementDbg_currentINSTARCAM_1494208189836.jpg
+/trackMovementDbg_currentINSTARCAM_1494209390265.jpg
