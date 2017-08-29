@@ -1,0 +1,898 @@
+https://apis.justwatch.com/content/urls?path=<URL encoded /us/movie/<movie title>>
+
+Provider IDs: https://apis.justwatch.com/content/providers/locale/en_US
+
+Find Provider for Movie: https://apis.justwatch.com/content/titles/movie/<ObjectID>/locale/en_US
+
+Good Code Reference: https://github.com/bvallelunga/just-watch-scraper/blob/master/scraper.coffee
+
+https://api.justwatch.com/titles/en_us/popular
+
+
+"""
+	-- json payload values --
+	values can be null (None), or each or all items in corresponding list
+		"content_types": -- null or ['movie', 'show']
+		"presentation_types": -- null or ['hd', 'sd']
+		"providers": -- null or ["mbi", "qfs", "tpl", "msf", "pls", "ply", "itu", "ddi", "crk", "qfx", "prs", "stn", "nfx"]
+		"genres": -- null or ["act", "ani", "cmy", "crm", "drm", "msc", "hrr", "hst", "fnt", "trl", "war", "wsn", "rma", "scf","doc", "fml", "spt"]
+		"languages": -- null
+		"release_year_from": -- null or year > 1900
+		"release_year_until": -- null or year < current year
+		"monetization_types": -- null or ["flatrate", "ads", "rent", "buy", "free"]
+		"min_price": -- null or integer value
+		"max_price": -- null or integer value,
+		"scoring_filter_types": -- null or
+						{
+						"imdb:score":
+							{
+							"min_scoring_value":0.0,"max_scoring_value":10.0
+							},
+						"tomato:meter":
+							{
+							"min_scoring_value":0,"max_scoring_value":100
+							}
+						},
+		"cinema_release": -- null,
+		"query": -- null or title as string 
+		}
+	shortened values 
+
+	providers
+	-- 
+		mbi - mubi
+		qfs - quickflix store
+		tpl - tenplay
+		msf - micrsoft
+		pls - playstation
+		ply - google play store
+		itu - itunes
+		ddi - dendy direct
+		crk - crackle
+		qfx - quickflix
+		prs - presto
+		stn - stan
+		nfx - netflix
+
+	genres
+	--
+		act - action
+		ani - animation
+		cmy - comedy
+		crm - crime
+		drm - drama
+		msc - music and musical
+		hrr - horror
+		hst - history
+		fnt - fantasy
+		trl - mystery and thriller 
+		war - war
+		wsn - western
+		rma - romance
+		scf - scifi
+		doc - documentary
+		fml - kids and family
+		spt - sport
+	
+"""
+
+provider IDs:
+[
+    {
+        "id": 8,
+        "profile_id": 13,
+        "technical_name": "netflix",
+        "short_name": "nfx",
+        "clear_name": "Netflix",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 10,
+        "display_priority": 1,
+        "domains": [],
+        "monetization_types": [
+            "flatrate"
+        ],
+        "icon_url": "/icon/430997/{profile}",
+        "slug": "netflix"
+    },
+    {
+        "id": 9,
+        "profile_id": 7,
+        "technical_name": "amazonprime",
+        "short_name": "amp",
+        "clear_name": "Amazon Prime Instant Video",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 4,
+        "display_priority": 2,
+        "domains": [],
+        "monetization_types": [
+            "flatrate"
+        ],
+        "icon_url": "/icon/430994/{profile}",
+        "slug": "amazon-prime-instant-video"
+    },
+    {
+        "id": 10,
+        "profile_id": 4,
+        "technical_name": "amazon",
+        "short_name": "amz",
+        "clear_name": "Amazon Instant Video",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 4,
+        "display_priority": 3,
+        "domains": [],
+        "monetization_types": [
+            "rent",
+            "buy"
+        ],
+        "icon_url": "/icon/430993/{profile}",
+        "slug": "amazon-instant-video"
+    },
+    {
+        "id": 2,
+        "profile_id": 1,
+        "technical_name": "itunes",
+        "short_name": "itu",
+        "clear_name": "Apple iTunes",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 4,
+        "domains": [],
+        "monetization_types": [
+            "rent",
+            "buy"
+        ],
+        "icon_url": "/icon/430995/{profile}",
+        "slug": "apple-itunes"
+    },
+    {
+        "id": 3,
+        "profile_id": 22,
+        "technical_name": "play",
+        "short_name": "ply",
+        "clear_name": "Google Play Movies",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 3,
+        "display_priority": 5,
+        "domains": [],
+        "monetization_types": [
+            "rent",
+            "buy"
+        ],
+        "icon_url": "/icon/430996/{profile}",
+        "slug": "google-play-movies"
+    },
+    {
+        "id": 105,
+        "profile_id": 289,
+        "technical_name": "fandangonow",
+        "short_name": "fdg",
+        "clear_name": "FandangoNOW",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 6,
+        "domains": [],
+        "monetization_types": [
+            "rent",
+            "buy"
+        ],
+        "icon_url": "/icon/3148110/{profile}",
+        "slug": "fandangonow"
+    },
+    {
+        "id": 15,
+        "profile_id": 28,
+        "technical_name": "hulu",
+        "short_name": "hlu",
+        "clear_name": "Hulu",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 7,
+        "domains": [],
+        "monetization_types": [
+            "ads",
+            "flatrate"
+        ],
+        "icon_url": "/icon/833221/{profile}",
+        "slug": "hulu"
+    },
+    {
+        "id": 7,
+        "profile_id": 10,
+        "technical_name": "vudu",
+        "short_name": "vdu",
+        "clear_name": "Vudu",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 9,
+        "display_priority": 8,
+        "domains": [],
+        "monetization_types": [
+            "rent",
+            "buy"
+        ],
+        "icon_url": "/icon/430998/{profile}",
+        "slug": "vudu"
+    },
+    {
+        "id": 92,
+        "profile_id": 268,
+        "technical_name": "viewyahoo",
+        "short_name": "vyh",
+        "clear_name": "Yahoo View",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 9,
+        "domains": [],
+        "monetization_types": [
+            "flatrate"
+        ],
+        "icon_url": "/icon/2419870/{profile}",
+        "slug": "yahoo-view"
+    },
+    {
+        "id": 27,
+        "profile_id": 66,
+        "technical_name": "hbonow",
+        "short_name": "hbn",
+        "clear_name": "HBO Now",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 10,
+        "domains": [],
+        "monetization_types": [
+            "flatrate"
+        ],
+        "icon_url": "/icon/575598/{profile}",
+        "slug": "hbo-now"
+    },
+    {
+        "id": 37,
+        "profile_id": 72,
+        "technical_name": "showtime",
+        "short_name": "sho",
+        "clear_name": "Showtime",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 11,
+        "domains": [],
+        "monetization_types": [
+            "flatrate"
+        ],
+        "icon_url": "/icon/677041/{profile}",
+        "slug": "showtime"
+    },
+    {
+        "id": 43,
+        "profile_id": 101,
+        "technical_name": "starz",
+        "short_name": "stz",
+        "clear_name": "Starz",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 12,
+        "domains": [],
+        "monetization_types": [
+            "flatrate",
+            "free"
+        ],
+        "icon_url": "/icon/902247/{profile}",
+        "slug": "starz"
+    },
+    {
+        "id": 18,
+        "profile_id": 34,
+        "technical_name": "playstation",
+        "short_name": "pls",
+        "clear_name": "PlayStation",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 13,
+        "domains": [],
+        "monetization_types": [
+            "rent",
+            "buy"
+        ],
+        "icon_url": "/icon/446737/{profile}",
+        "slug": "playstation"
+    },
+    {
+        "id": 68,
+        "profile_id": 156,
+        "technical_name": "microsoft",
+        "short_name": "msf",
+        "clear_name": "Microsoft Store",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 14,
+        "domains": [],
+        "monetization_types": [
+            "buy",
+            "rent"
+        ],
+        "icon_url": "/icon/820542/{profile}",
+        "slug": "microsoft-store"
+    },
+    {
+        "id": 83,
+        "profile_id": 210,
+        "technical_name": "thecw",
+        "short_name": "tcw",
+        "clear_name": "The CW",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 15,
+        "domains": [],
+        "monetization_types": [
+            "flatrate",
+            "free"
+        ],
+        "icon_url": "/icon/950814/{profile}",
+        "slug": "the-cw"
+    },
+    {
+        "id": 12,
+        "profile_id": 25,
+        "technical_name": "crackle",
+        "short_name": "crk",
+        "clear_name": "Crackle",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 12,
+        "display_priority": 16,
+        "domains": [],
+        "monetization_types": [
+            "ads"
+        ],
+        "icon_url": "/icon/438827/{profile}",
+        "slug": "crackle"
+    },
+    {
+        "id": 73,
+        "profile_id": 174,
+        "technical_name": "tubitv",
+        "short_name": "tbv",
+        "clear_name": "Tubi TV",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 17,
+        "domains": [],
+        "monetization_types": [
+            "ads"
+        ],
+        "icon_url": "/icon/911362/{profile}",
+        "slug": "tubi-tv"
+    },
+    {
+        "id": 102,
+        "profile_id": 288,
+        "technical_name": "filmstruck",
+        "short_name": "fsk",
+        "clear_name": "FilmStruck",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 18,
+        "domains": [],
+        "monetization_types": [
+            "flatrate"
+        ],
+        "icon_url": "/icon/3059246/{profile}",
+        "slug": "filmstruck"
+    },
+    {
+        "id": 162,
+        "profile_id": 517,
+        "technical_name": "amctheatres",
+        "short_name": "amt",
+        "clear_name": "AMC Theatres",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 19,
+        "domains": [],
+        "monetization_types": [
+            "cinema"
+        ],
+        "icon_url": "/icon/7425739/{profile}",
+        "slug": "amc-theatres"
+    },
+    {
+        "id": 80,
+        "profile_id": 209,
+        "technical_name": "amc",
+        "short_name": "amc",
+        "clear_name": "AMC",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 20,
+        "domains": [],
+        "monetization_types": [
+            "free"
+        ],
+        "icon_url": "/icon/922527/{profile}",
+        "slug": "amc"
+    },
+    {
+        "id": 25,
+        "profile_id": 65,
+        "technical_name": "fandor",
+        "short_name": "fnd",
+        "clear_name": "Fandor",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 21,
+        "domains": [],
+        "monetization_types": [
+            "flatrate"
+        ],
+        "icon_url": "/icon/554608/{profile}",
+        "slug": "fandor"
+    },
+    {
+        "id": 78,
+        "profile_id": 348,
+        "technical_name": "cbs",
+        "short_name": "cbs",
+        "clear_name": "CBS",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 22,
+        "domains": [],
+        "monetization_types": [
+            "flatrate",
+            "free"
+        ],
+        "icon_url": "/icon/920372/{profile}",
+        "slug": "cbs"
+    },
+    {
+        "id": 148,
+        "profile_id": 442,
+        "technical_name": "abcgo",
+        "short_name": "abc",
+        "clear_name": "ABC",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 23,
+        "domains": [],
+        "monetization_types": [
+            "ads"
+        ],
+        "icon_url": "/icon/5983493/{profile}",
+        "slug": "abc"
+    },
+    {
+        "id": 79,
+        "profile_id": 514,
+        "technical_name": "nbc",
+        "short_name": "nbc",
+        "clear_name": "NBC",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 24,
+        "domains": [],
+        "monetization_types": [
+            "free",
+            "flatrate"
+        ],
+        "icon_url": "/icon/922526/{profile}",
+        "slug": "nbc"
+    },
+    {
+        "id": 34,
+        "profile_id": 68,
+        "technical_name": "epix",
+        "short_name": "epx",
+        "clear_name": "Epix",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 25,
+        "domains": [],
+        "monetization_types": [
+            "flatrate"
+        ],
+        "icon_url": "/icon/633230/{profile}",
+        "slug": "epix"
+    },
+    {
+        "id": 139,
+        "profile_id": 391,
+        "technical_name": "maxgo",
+        "short_name": "mxg",
+        "clear_name": "Max Go",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 26,
+        "domains": [],
+        "monetization_types": [
+            "flatrate"
+        ],
+        "icon_url": "/icon/5160001/{profile}",
+        "slug": "max-go"
+    },
+    {
+        "id": 123,
+        "profile_id": 351,
+        "technical_name": "fxnow",
+        "short_name": "fxn",
+        "clear_name": "FXNow",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 27,
+        "domains": [],
+        "monetization_types": [
+            "free"
+        ],
+        "icon_url": "/icon/4259277/{profile}",
+        "slug": "fxnow"
+    },
+    {
+        "id": 155,
+        "profile_id": 453,
+        "technical_name": "history",
+        "short_name": "his",
+        "clear_name": "History",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 28,
+        "domains": [],
+        "monetization_types": [
+            "flatrate",
+            "ads"
+        ],
+        "icon_url": "/icon/6675367/{profile}",
+        "slug": "history"
+    },
+    {
+        "id": 156,
+        "profile_id": 451,
+        "technical_name": "aetv",
+        "short_name": "aae",
+        "clear_name": "A&E",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 29,
+        "domains": [],
+        "monetization_types": [
+            "flatrate",
+            "ads"
+        ],
+        "icon_url": "/icon/6675987/{profile}",
+        "slug": "aande"
+    },
+    {
+        "id": 157,
+        "profile_id": 452,
+        "technical_name": "lifetime",
+        "short_name": "lft",
+        "clear_name": "Lifetime",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 30,
+        "domains": [],
+        "monetization_types": [
+            "flatrate",
+            "ads"
+        ],
+        "icon_url": "/icon/6675988/{profile}",
+        "slug": "lifetime"
+    },
+    {
+        "id": 99,
+        "profile_id": 276,
+        "technical_name": "shudder",
+        "short_name": "shd",
+        "clear_name": "Shudder",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 31,
+        "domains": [],
+        "monetization_types": [
+            "flatrate"
+        ],
+        "icon_url": "/icon/2562359/{profile}",
+        "slug": "shudder"
+    },
+    {
+        "id": 31,
+        "profile_id": 447,
+        "technical_name": "hbogo",
+        "short_name": "hbg",
+        "clear_name": "HBO Go",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 32,
+        "domains": [],
+        "monetization_types": [
+            "flatrate"
+        ],
+        "icon_url": "/icon/614494/{profile}",
+        "slug": "hbo-go"
+    },
+    {
+        "id": 87,
+        "profile_id": 269,
+        "technical_name": "acorntv",
+        "short_name": "act",
+        "clear_name": "Acorn TV",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 33,
+        "domains": [],
+        "monetization_types": [
+            "flatrate"
+        ],
+        "icon_url": "/icon/1296210/{profile}",
+        "slug": "acorn-tv"
+    },
+    {
+        "id": 143,
+        "profile_id": 432,
+        "technical_name": "sundancenow",
+        "short_name": "sdn",
+        "clear_name": "Sundance Now",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 34,
+        "domains": [],
+        "monetization_types": [
+            "flatrate"
+        ],
+        "icon_url": "/icon/5676163/{profile}",
+        "slug": "sundance-now"
+    },
+    {
+        "id": 151,
+        "profile_id": 448,
+        "technical_name": "britbox",
+        "short_name": "bbo",
+        "clear_name": "BritBox",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 35,
+        "domains": [],
+        "monetization_types": [
+            "flatrate"
+        ],
+        "icon_url": "/icon/6368831/{profile}",
+        "slug": "britbox"
+    },
+    {
+        "id": 100,
+        "profile_id": 280,
+        "technical_name": "guidedoc",
+        "short_name": "gdc",
+        "clear_name": "GuideDoc",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 36,
+        "domains": [],
+        "monetization_types": [
+            "flatrate"
+        ],
+        "icon_url": "/icon/2625277/{profile}",
+        "slug": "guidedoc"
+    },
+    {
+        "id": 14,
+        "profile_id": 27,
+        "technical_name": "realeyz",
+        "short_name": "rlz",
+        "clear_name": "realeyz",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 37,
+        "domains": [],
+        "monetization_types": [
+            "flatrate",
+            "rent",
+            "buy"
+        ],
+        "icon_url": "/icon/441358/{profile}",
+        "slug": "realeyz"
+    },
+    {
+        "id": 11,
+        "profile_id": 19,
+        "technical_name": "mubi",
+        "short_name": "mbi",
+        "clear_name": "Mubi",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 11,
+        "display_priority": 38,
+        "domains": [],
+        "monetization_types": [
+            "flatrate"
+        ],
+        "icon_url": "/icon/438826/{profile}",
+        "slug": "mubi"
+    },
+    {
+        "id": 60,
+        "profile_id": 128,
+        "technical_name": "fandango",
+        "short_name": "fad",
+        "clear_name": "Fandango",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 39,
+        "domains": [],
+        "monetization_types": [
+            "cinema"
+        ],
+        "icon_url": "/icon/811323/{profile}",
+        "slug": "fandango"
+    },
+    {
+        "id": 175,
+        "profile_id": 535,
+        "technical_name": "netflixkids",
+        "short_name": "nfk",
+        "clear_name": "Netflix Kids",
+        "has_global_account": false,
+        "can_create_title": false,
+        "data": {
+            "public_info": false
+        },
+        "priority": 5,
+        "display_priority": 40,
+        "domains": [],
+        "monetization_types": [
+            "flatrate"
+        ],
+        "icon_url": "/icon/14385750/{profile}",
+        "slug": "netflix-kids"
+    }
+]

@@ -2,30 +2,37 @@ package com.pf.plexapi;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 
 import org.apache.log4j.Logger;
 
 import com.pf.canistreamit.api.CanIStreamItAPI;
 import com.pf.canistreamit.api.CanIStreamItAPIException;
-import com.pf.guidebox.GuideBoxAPI;
-import com.pf.guidebox.GuideBoxAPIException;
-import com.pf.netflix.api.NetflixAPI;
-import com.pf.netflix.api.NetflixAPIException;
+import com.pf.justwatch.JustWatchAPI;
+import com.pf.justwatch.JustWatchAPIException;
 import com.pf.plexapi.model.library.Directory;
 import com.pf.plexapi.model.library.Libraries;
 import com.pf.plexapi.model.movie.MovieItem;
 import com.pf.plexapi.model.movies.Movies;
 import com.pf.plexapi.model.movies.Video;
 import com.pf.plexapi.model.simple.SimpleMovie;
+import com.pf.plexapi.xml.PlexPurgeSettings;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.DomDriver;
 import com.thoughtworks.xstream.mapper.MapperWrapper;
 
 public class PlexAPI {
+	private final static String PLEX_PURGE_SETTINGS_FILE = "config/plex-purge-settings.xml";
 	private Logger logger = Logger.getLogger(getClass());
 	private String hostname = "localhost";
 	private int port = 32400;
@@ -35,6 +42,7 @@ public class PlexAPI {
 	XStream movieItemXStream = null;
 	boolean netflixSwitch = false;
 	boolean amazonPrimeSwitch = false;
+	private PlexPurgeSettings plexPurgeSettings;
 	
 	public PlexAPI(String hostname, int port, String plexToken) {
 		if(hostname != null) {
@@ -150,33 +158,29 @@ public class PlexAPI {
 			setNetflixSwitch(saveNetflixSwitch);
 			setAmazonPrimeSwitch(saveAmazonPrimeSwitch);
 		}
+		JustWatchAPI justWatchApi;
+		try {
+			justWatchApi = new JustWatchAPI();
+		} catch (JustWatchAPIException e1) {
+			throw(new PlexAPIException("JustWatchAPI failed for file " + 
+					movieFile + "!", e1));
+		}
 		if(isNetflixSwitch() && movie != null) {
-			/*
-			NetflixAPI netflixAPI = new NetflixAPI();
 			try {
-				movie.setNetflixId(netflixAPI.getNetflixId(movie));
-			} catch (NetflixAPIException e) {
-				throw(new PlexAPIException("Unable to get Netflix ID for file " + 
-											movieFile + "!", e));
+				movie.setNetflix(justWatchApi.isNetFlix(movie));
 			}
-			*/
-			CanIStreamItAPI canIStreamItAPI = new CanIStreamItAPI();
-			try {
-				movie.setNetflix(canIStreamItAPI.isNetflixStreamable(movie));
-			}
-			catch (CanIStreamItAPIException e) {
+			catch (JustWatchAPIException e) {
 				throw(new PlexAPIException("Unable to determine if netflix streamable for file " + 
 						movieFile + "!", e));
 			}
 		}
 		if(isAmazonPrimeSwitch() && movie != null) {
-			GuideBoxAPI guideBoxAPI = new GuideBoxAPI();
 			try {
-				movie.setAmazonPrime(guideBoxAPI.isAmazonPrime(movie));
+				movie.setAmazonPrime(justWatchApi.isAmazonPrime(movie));
 			}
-			catch (GuideBoxAPIException ge) {
-				throw(new PlexAPIException("Unable to determine if Amazon Prime from GuideBox API for file " + 
-						movieFile + "!", ge));
+			catch (JustWatchAPIException e) {
+				throw(new PlexAPIException("Unable to determine if amazon prime streamable for file " + 
+						movieFile + "!", e));
 			}
 		}
 		return(movie);
@@ -190,6 +194,12 @@ public class PlexAPI {
 		Video tmpVideo = null;
 		MovieItem tmpMovieItem = null;
 		SimpleMovie tmpSimpleMovie = null;
+		JustWatchAPI justWatchApi;
+		try {
+			justWatchApi = new JustWatchAPI();
+		} catch (JustWatchAPIException e1) {
+			throw(new PlexAPIException("JustWatchAPI failed!", e1));
+		}
 		for(int x = 0; x < movies.getMediaContainer().getVideo().length; x++) {
 			tmpVideo = movies.getMediaContainer().getVideo()[x];
 			tmpSimpleMovie = new SimpleMovie();
@@ -197,6 +207,7 @@ public class PlexAPI {
 			tmpSimpleMovie.setMovieKey(tmpVideo.getKey());
 			tmpSimpleMovie.setTitle(tmpVideo.getTitle());
 			tmpSimpleMovie.setYear(tmpVideo.getYear());
+			tmpSimpleMovie.setSummary(tmpVideo.getSummary());
 			if(tmpVideo.getMedia().size() > 1) {
 				logger.warn("There were more than 2 media files for " + tmpVideo.getTitle());
 			}
@@ -204,6 +215,10 @@ public class PlexAPI {
 			
 			tmpMovieItem = getMovie(tmpVideo.getKey());
 			// extract IMDB ID
+			if(tmpMovieItem.getMediaContainer().getVideo() == null) {
+				logger.warn("The PLEX movie " + tmpMovieItem + " was missing Video object! Skipping.");
+				continue;
+			}
 			String guid = tmpMovieItem.getMediaContainer().getVideo().getGuid();
 			if(guid == null) {
 				logger.warn("The PLEX movie " + tmpMovieItem + " was missing Video.guid! Skipping.");
@@ -222,32 +237,21 @@ public class PlexAPI {
 				}
 			}
 			if(isNetflixSwitch()) {
-				/*
-				NetflixAPI netflixAPI = new NetflixAPI();
 				try {
-					tmpSimpleMovie.setNetflixId(netflixAPI.getNetflixId(tmpSimpleMovie));
-				} catch (NetflixAPIException e) {
-					throw(new PlexAPIException("Unable to get Netflix ID for movie " + 
-												tmpSimpleMovie + "!", e));
+					tmpSimpleMovie.setNetflix(justWatchApi.isNetFlix(tmpSimpleMovie));
 				}
-				*/
-				CanIStreamItAPI canIStreamItAPI = new CanIStreamItAPI();
-				try {
-					tmpSimpleMovie.setNetflix(canIStreamItAPI.isNetflixStreamable(tmpSimpleMovie));
-				}
-				catch (CanIStreamItAPIException e) {
+				catch (JustWatchAPIException e) {
 					throw(new PlexAPIException("Unable to determine if netflix streamable for file " + 
 							tmpSimpleMovie + "!", e));
 				}
 			}
 			if(isAmazonPrimeSwitch()) {
-				GuideBoxAPI guideBoxAPI = new GuideBoxAPI();
 				try {
-					tmpSimpleMovie.setAmazonPrime(guideBoxAPI.isAmazonPrime(tmpSimpleMovie));
+					tmpSimpleMovie.setAmazonPrime(justWatchApi.isAmazonPrime(tmpSimpleMovie));
 				}
-				catch (GuideBoxAPIException ge) {
-					throw(new PlexAPIException("Unable to determine if Amazon Prime from GuideBox API for movie " + 
-												tmpSimpleMovie + "!", ge));
+				catch (JustWatchAPIException e) {
+					throw(new PlexAPIException("Unable to determine if amazon prime streamable for file " + 
+							tmpSimpleMovie + "!", e));
 				}
 			}
 			simpleMovies.add(tmpSimpleMovie);
@@ -255,7 +259,7 @@ public class PlexAPI {
 		return(simpleMovies);
 	}
 	
-	public PlexAPI(String plexToken) {
+	public PlexAPI(String plexToken) throws IOException {
 		this((String)null, 0, plexToken);
 	}
 
@@ -279,7 +283,20 @@ public class PlexAPI {
 		moviesXStream.alias("Video", com.pf.plexapi.model.movies.Video.class);
 		moviesXStream.alias("Writer", com.pf.plexapi.model.movies.Writer.class);
 		
-		movieItemXStream = new XStream(new DomDriver());
+		movieItemXStream = new XStream(new DomDriver()) {
+		    @Override
+		    protected MapperWrapper wrapMapper(MapperWrapper next) {
+		        return new MapperWrapper(next) {
+		            @Override
+		            public boolean shouldSerializeMember(Class definedIn, String fieldName) {
+		                if (definedIn == Object.class) {
+		                    return false;
+		                }
+		                return super.shouldSerializeMember(definedIn, fieldName);
+		            }
+		        };
+		    }
+		};
 		movieItemXStream.autodetectAnnotations(true);
 		movieItemXStream.alias("Country", com.pf.plexapi.model.movie.Country.class);
 		movieItemXStream.alias("Director", com.pf.plexapi.model.movie.Director.class);
@@ -294,6 +311,15 @@ public class PlexAPI {
 		movieItemXStream.alias("Writer", com.pf.plexapi.model.movie.Writer.class);
 		movieItemXStream.alias("Field", com.pf.plexapi.model.movie.Field.class);
 		
+		File plexPurgeSettingsFile = new File(PLEX_PURGE_SETTINGS_FILE);
+		JAXBContext jaxbContext;
+		try {
+			jaxbContext = JAXBContext.newInstance(PlexPurgeSettings.class);
+			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+			plexPurgeSettings = (PlexPurgeSettings) jaxbUnmarshaller.unmarshal(plexPurgeSettingsFile);
+		} catch (JAXBException e) {
+			logger.warn("Error unmarshaling file " + plexPurgeSettingsFile + "!", e);
+		}		
 	}
 
 	public String getHostname() {
@@ -382,39 +408,45 @@ public class PlexAPI {
 			printUsage();
 			System.exit(-1);
 		}
-		PlexAPI plexAPI = new PlexAPI(hostname, port, plexToken);
-		plexAPI.setNetflixSwitch(netflix);
-		plexAPI.setAmazonPrimeSwitch(amazonPrime);
-		PrintStream out = System.out;
+		PlexAPI plexAPI;
 		try {
-			if(outputFile != null) {
-				out = new PrintStream(outputFile);
+			plexAPI = new PlexAPI(hostname, port, plexToken);
+			plexAPI.setNetflixSwitch(netflix);
+			plexAPI.setAmazonPrimeSwitch(amazonPrime);
+			PrintStream out = System.out;
+			try {
+				if(outputFile != null) {
+					out = new PrintStream(outputFile);
+				}
+				if(listLibraries) {
+					for (String name : plexAPI.getLibraries()) {
+						out.println(name);
+					}
+				}
+				else if(listMovies) {
+					for(SimpleMovie movie : plexAPI.getSimpleMovies(libraryName)) {
+						out.println(movie);
+					}
+				}
+				else if(movieFile != null) {
+					if(libraryName == null) {
+						System.err.println("If you use getMovieInfo, you must supply a library.");
+						System.exit(-1);
+					}
+					out.println(plexAPI.getSimpleMovie(libraryName, movieFile));
+				}
+			} catch (PlexAPIException | FileNotFoundException e) {
+				e.printStackTrace(System.err);
+				System.exit(-1);
 			}
-			if(listLibraries) {
-				for (String name : plexAPI.getLibraries()) {
-					out.println(name);
+			finally {
+				if(out != null && out != System.out) {
+					out.close();
 				}
 			}
-			else if(listMovies) {
-				for(SimpleMovie movie : plexAPI.getSimpleMovies(libraryName)) {
-					out.println(movie);
-				}
-			}
-			else if(movieFile != null) {
-				if(libraryName == null) {
-					System.err.println("If you use getMovieInfo, you must supply a library.");
-					System.exit(-1);
-				}
-				out.println(plexAPI.getSimpleMovie(libraryName, movieFile));
-			}
-		} catch (PlexAPIException | FileNotFoundException e) {
-			e.printStackTrace(System.err);
+		} catch (Exception e1) {
+			e1.printStackTrace(System.err);
 			System.exit(-1);
-		}
-		finally {
-			if(out != null && out != System.out) {
-				out.close();
-			}
 		}
 		System.exit(0);
 	}

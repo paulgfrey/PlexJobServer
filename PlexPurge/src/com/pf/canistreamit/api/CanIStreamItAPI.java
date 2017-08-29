@@ -17,10 +17,9 @@ import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
 import com.pf.canistreamit.model.Movie;
-import com.pf.guidebox.GuideBoxAPI;
-import com.pf.guidebox.model.GuideBoxMovie;
+import com.pf.justwatch.JustWatchAPI;
 import com.pf.plexapi.model.simple.SimpleMovie;
-import com.pf.plexapi.model.simple.Source;
+import com.pf.plexapi.xml.PlexPurgeSettings;
 
 /**
  * The CanIStreamIt API consists of the following REST calls:
@@ -32,6 +31,7 @@ import com.pf.plexapi.model.simple.Source;
  * @author paulf
  *
  */
+@Deprecated
 public class CanIStreamItAPI {
 	private Logger logger = Logger.getLogger(getClass());
 	private Gson gson = new Gson();
@@ -40,9 +40,14 @@ public class CanIStreamItAPI {
 	private final static int MAX_RETRIES = 3;
 	private final static String MOVIE_SEARCH_URL = "http://www.canistream.it/services/search";
 	private final static String MOVIE_QUERY_URL = "http://www.canistream.it/services/query";
-	private GuideBoxAPI guideBoxAPI;
+	private PlexPurgeSettings plexPurgeSettings;
 
 	public CanIStreamItAPI() {
+		throw new UnsupportedOperationException("CanIStreamItAPI class does not support empty settings!");
+	}
+	
+	public CanIStreamItAPI(PlexPurgeSettings plexPurgeSettings) {
+		this.plexPurgeSettings = plexPurgeSettings;
 		initialize();
 	}
 
@@ -72,17 +77,8 @@ public class CanIStreamItAPI {
 		    			|| simpleMovie.getTitle().toLowerCase().contains("1080p")
 		    			|| simpleMovie.getTitle().toLowerCase().contains("+")
 		    			|| simpleMovie.getTitle().toLowerCase().contains("visit")) {
-			    	GuideBoxMovie guideBoxMovie = null;
-			    	if(simpleMovie.getSource() == Source.IMDB) {
-			    		guideBoxMovie = guideBoxAPI.getMovieByImdb(simpleMovie.getMovieId());
-			    	}
-			    	else {
-			    		guideBoxMovie = guideBoxAPI.getMovieByMovieDb(simpleMovie.getMovieId());	
-			    	}
+		    		JustWatchAPI justWatchApi = new JustWatchAPI();
 			    	// If there is no title from GuideBox then just move forward with the Plex title.
-			    	if(guideBoxMovie != null && guideBoxMovie.getTitle() != null) {
-				    	simpleMovie.setTitle(guideBoxMovie.getTitle());
-			    	}
 		    	}
 		    	HttpGet httpGet = new HttpGet(MOVIE_SEARCH_URL + "?movieName=" 
 		    							+ URLEncoder.encode(simpleMovie.getTitle()));
@@ -238,6 +234,5 @@ public class CanIStreamItAPI {
 		} catch (Throwable e) {
 			logger.error("Unable to initialize HttpClient.", e);
 		}
-		guideBoxAPI = new GuideBoxAPI();
 	}
 }

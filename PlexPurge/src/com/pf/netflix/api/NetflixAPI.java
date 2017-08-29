@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URLEncoder;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -15,11 +14,8 @@ import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
-import com.pf.guidebox.GuideBoxAPI;
-import com.pf.guidebox.model.GuideBoxMovie;
 import com.pf.netflix.api.model.IMDBResponse;
 import com.pf.netflix.api.model.MovieResponse;
-import com.pf.plexapi.model.movie.MovieItem;
 import com.pf.plexapi.model.simple.SimpleMovie;
 import com.pf.plexapi.model.simple.Source;
 
@@ -35,6 +31,7 @@ import com.pf.plexapi.model.simple.Source;
  * @author paulf
  *
  */
+@Deprecated
 public class NetflixAPI {
 	private Logger logger = Logger.getLogger(getClass());
 	private Gson gson = new Gson();
@@ -43,7 +40,6 @@ public class NetflixAPI {
 	private final static int MAX_RETRIES = 3;
 	private final static String IMDB_LOOKUP_URL = "http://netflixroulette.net/api/v2/usa/imdb";
 	private final static String NETFLIX_MOVIE_URL = "http://netflixroulette.net/api/v2/usa/movie";
-	private GuideBoxAPI guideBoxAPI;
 
 	public NetflixAPI() {
 		initialize();
@@ -63,8 +59,7 @@ public class NetflixAPI {
 		    		imdbId = movie.getMovieId();
 		    	}
 		    	else {
-			    	GuideBoxMovie movieDbMovie = guideBoxAPI.getMovieByMovieDb(movie.getMovieId());	
-			    	imdbId = movieDbMovie.getImdb();
+		    		throw new NetflixAPIException("Source.MOVIEDB is not supported yet!");
 		    	}
 		    	if(imdbId == null || imdbId.trim().length() == 0) {
 		    		logger.warn("Unable to determine IMDB ID for movie " + movie.getTitle() + 
@@ -214,6 +209,5 @@ public class NetflixAPI {
 		} catch (Throwable e) {
 			logger.error("Unable to initialize HttpClient.", e);
 		}
-		guideBoxAPI = new GuideBoxAPI();
 	}
 }

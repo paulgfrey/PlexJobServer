@@ -11,6 +11,7 @@ public class SimpleMovie {
 	//private String netflixId = null;
 	private boolean netflix = false;
 	private boolean amazonPrime = false;
+	private String summary = null;
 	
 	public SimpleMovie() {
 	}
@@ -113,5 +114,13 @@ public class SimpleMovie {
 
 	public void setNetflix(boolean netflix) {
 		this.netflix = netflix;
+	}
+
+	public String getSummary() {
+		return summary;
+	}
+
+	public void setSummary(String summary) {
+		this.summary = summary;
 	}
 }
