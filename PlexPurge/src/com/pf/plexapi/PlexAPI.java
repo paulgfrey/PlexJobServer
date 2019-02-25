@@ -5,8 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URL;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,8 +14,6 @@ import javax.xml.bind.Unmarshaller;
 
 import org.apache.log4j.Logger;
 
-import com.pf.canistreamit.api.CanIStreamItAPI;
-import com.pf.canistreamit.api.CanIStreamItAPIException;
 import com.pf.justwatch.JustWatchAPI;
 import com.pf.justwatch.JustWatchAPIException;
 import com.pf.plexapi.model.library.Directory;

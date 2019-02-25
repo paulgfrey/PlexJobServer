@@ -26,7 +26,7 @@ import org.apache.log4j.Logger;
 public class CouchPotatoWebHook extends HttpServlet {
 	private static Logger LOG = Logger.getLogger(CouchPotatoWebHook.class);
 	private static final long serialVersionUID = 1L;
-	private static final String BASE_MOVIE_DIR = "/mnt/htpcdrive2/plex/movies";
+	private String baseMovieDir = "/mnt/htpcdrive2/plex/movies";
       
     /**
      * @see HttpServlet#HttpServlet()
@@ -52,6 +52,10 @@ public class CouchPotatoWebHook extends HttpServlet {
 	private void performTask(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		String username = "paulf";
 
+		if(System.getenv("BASE_MOVIE_DIR") != null) {
+			baseMovieDir = System.getenv("BASE_MOVIE_DIR");
+			LOG.info("BASE_MOVIE_DIR=" + baseMovieDir);
+		}
 		ServletOutputStream out = response.getOutputStream();
 		LOG.info("Headers:");
 		Enumeration<String> headNames = request.getHeaderNames();
@@ -69,6 +73,12 @@ public class CouchPotatoWebHook extends HttpServlet {
 		}
 		String imdbId = request.getParameter("imdb_id");
 		String message = request.getParameter("message");
+		if(imdbId == null) {
+			// This means that couchpotato is just checking we are up.
+			LOG.info("Couchpotato is just checking we are up.");
+			out.println("OK");
+			return;
+		}
 		// TODO: Need a way to convert imdb_id to movie name.
 		// For now we'll use the message parameter passed which is in the format
 		// Downloaded <TITLE> (<TYPE>)
@@ -84,24 +94,26 @@ public class CouchPotatoWebHook extends HttpServlet {
 					message + "\"");
 		}
 		// Find the movie directory to get the move file.
-		File dir = new File(BASE_MOVIE_DIR);
-		final String tmpTitle = title;
+		File dir = new File(baseMovieDir);
+		final String tmpTitle = title.replaceFirst("The", "")
+				.replaceFirst("A", "")
+				.trim();
 		File[] matchingFiles = dir.listFiles(new FileFilter() {
 		    public boolean accept(File pathname) {
-		        return pathname.getName().contains(tmpTitle);
+		        return pathname.getName().startsWith(tmpTitle);
 		    }
 		});
 		if(matchingFiles == null) {
 			throw new IOException("Base movie directory was not found: " + 
-					BASE_MOVIE_DIR);
+					baseMovieDir);
 		}
 		if(matchingFiles.length == 0) {
-			throw new IOException("Movie directory " + title + " was not found.");
+			throw new IOException("Movie directory " + title + " was not found in directory " + baseMovieDir);
 		}
 		if(matchingFiles.length > 1) {
 			throw new IOException("More than one movie entry was found for " + title);
 		}
-		String movieDirStr = BASE_MOVIE_DIR + "/" + matchingFiles[0].getName();
+		String movieDirStr = baseMovieDir + "/" + matchingFiles[0].getName();
 		File movieDir = new File(movieDirStr);
 		if(! movieDir.exists()) {
 			throw(new IOException("movieDir=" + movieDir + " does not exist."));
@@ -109,7 +121,7 @@ public class CouchPotatoWebHook extends HttpServlet {
 		String movieFile = null;
 		String[] files = movieDir.list();
 		for(String file : files) {
-			if(file.startsWith(title + ".")) {
+			if(file.matches(title + "(.mp4|.avi|.mkv)")) {
 				movieFile = movieDirStr + "/" + file;
 				break;
 			}
