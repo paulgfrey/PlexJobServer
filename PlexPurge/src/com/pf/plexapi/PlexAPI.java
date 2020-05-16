@@ -128,7 +128,8 @@ public class PlexAPI {
 			logger.debug("movies=" + movieItem);
 		}
 		catch(Exception e) {
-			throw(new PlexAPIException("Get movie failed for movie key " + movieKey + "!", e));
+			logger.error("Get movie failed for movie key " + movieKey + "!", e);
+			movieItem = null;
 		}
 		return movieItem;		
 	}
@@ -210,6 +211,10 @@ public class PlexAPI {
 			tmpSimpleMovie.setMediaFile(tmpVideo.getMedia().get(0).getPart().get(0).getFile());
 			
 			tmpMovieItem = getMovie(tmpVideo.getKey());
+			if(tmpMovieItem == null) {
+				logger.warn("The PLEX movie " + tmpMovieItem + " encountering an error based on video key! Skipping.");
+				continue;
+			}
 			// extract IMDB ID
 			if(tmpMovieItem.getMediaContainer().getVideo() == null) {
 				logger.warn("The PLEX movie " + tmpMovieItem + " was missing Video object! Skipping.");

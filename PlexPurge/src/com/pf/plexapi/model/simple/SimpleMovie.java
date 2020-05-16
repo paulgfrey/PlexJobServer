@@ -1,5 +1,8 @@
 package com.pf.plexapi.model.simple;
 
+import java.util.Calendar;
+import java.util.Date;
+
 public class SimpleMovie {
 	private Source source = null;
 	private String title = null;
@@ -25,7 +28,14 @@ public class SimpleMovie {
 	}
 
 	public String getYear() {
-		return year;
+		if(year == null) {
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(new Date());
+			return "" + cal.get(Calendar.YEAR);
+		}
+		else {
+			return year;
+		}
 	}
 
 	public void setYear(String year) {

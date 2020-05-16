@@ -8,10 +8,13 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509TrustManager;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
@@ -31,10 +34,6 @@ import com.pf.justwatch.model.Offer;
 import com.pf.plexapi.model.simple.SimpleMovie;
 
 /**
- * This API class is using the GuideBox API <a href="https://api.guidebox.com/">https://api.guidebox.com/</a>.  This API
- * queries many of the video providers (Hulu Plus, Amazon, etc - not Netflix).  You can
- * use this API to determine if a movie is available for streaming or not.
- * NOTE: To clearly identify the movie, the API will require an IMDB ID to start the look up process.
  * 
  * This class uses REST APIs to return JSON data.
  * @author paulf
@@ -46,10 +45,11 @@ public class JustWatchAPI {
 	private final static String UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.120 Safari/537.36";
 	private final static int MAX_RETRIES = 3;
 	private final static long SLEEP_TIME = 1000L;
-	private String baseUrl = "https://api.justwatch.com/titles/en_US/popular";
+	private String baseUrl = "https://api.justwatch.com/content/titles/en_US/popular";
 	private final static int AMAZONPRIME_PROVIDER_ID = 9;
 	private final static int NETFLIX_PROVIDER_ID = 8;
-	private final static long SLEEP_BETWEEN_CALLS = (10L*1000L);
+	private final static long SLEEP_BETWEEN_CALLS = 5000L; //(10L*1000L);
+	Pattern movieTitlePattern = Pattern.compile("^(.*) \\(\\d{4}\\).*");
 
 	public JustWatchAPI() throws JustWatchAPIException {
 		initialize();
@@ -180,6 +180,10 @@ public class JustWatchAPI {
 		}
 		for(Item item : justWatchMovies.getItems()) {
 			logger.debug("item=" + item.getTitle() + " (" + item.getOriginalReleaseYear() + ")");
+			if(item.getTitle() == null && item.getOriginalTitle() == null) {
+				logger.warn("Skipping.  Title missing from item=" + item);
+				continue;
+			}
 			if(justWatchMovieMatchesPlexMovie(item, simpleMovie)) {
 				foundItem = item;
 			}
@@ -200,9 +204,10 @@ public class JustWatchAPI {
 	
 	private boolean justWatchMovieMatchesPlexMovie(Item item, SimpleMovie simpleMovie) {
 		String sanitizedTitle = getSanitizedTitle(simpleMovie);
-		String sanitizedItemSummary = getSanitizedSummary(item.getTitle(), item.getShortDescription());
+		String itemTitle = StringUtils.defaultIfEmpty(item.getTitle(), item.getOriginalTitle());
+		String sanitizedItemSummary = getSanitizedSummary(itemTitle, item.getShortDescription());
 		String sanitizedPlexSummary = getSanitizedSummary(simpleMovie.getTitle(), simpleMovie.getSummary());
-		if((item.getTitle().trim().equalsIgnoreCase(sanitizedTitle) &&
+		if((itemTitle.trim().equalsIgnoreCase(sanitizedTitle) &&
 				item.getOriginalReleaseYear() == Integer.parseInt(simpleMovie.getYear()))
 				|| sanitizedItemSummary.equals(sanitizedPlexSummary)) {
 			return true;
@@ -214,10 +219,18 @@ public class JustWatchAPI {
 	private String getSanitizedTitle(SimpleMovie simpleMovie) {
 		String rtnTitle = simpleMovie.getTitle();
 		rtnTitle = rtnTitle.replace('.', ' ');
-		int ndx = rtnTitle.indexOf(simpleMovie.getYear());
-		if(ndx != -1) {
-			rtnTitle = rtnTitle.substring(0, ndx);
-		}
+		
+        Matcher matcher = movieTitlePattern.matcher(rtnTitle);
+        if(matcher.matches()) {
+        	return matcher.group(1).trim();
+        }
+        else {
+        	// Maybe the 
+    		int ndx = rtnTitle.indexOf(simpleMovie.getYear());
+    		if(ndx != -1) {
+    			rtnTitle = rtnTitle.substring(0, ndx);
+    		}
+        }
 		return rtnTitle.trim();
 	}
 	
