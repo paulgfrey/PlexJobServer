@@ -66,6 +66,9 @@ public class RadarrWebHook extends HttpServlet {
 			if(hostname.toLowerCase().contains("odroid")) {
 				username = "odroid";
 			}
+			else if(hostname.toLowerCase().contains("atomicpi")) {
+				username = "atomicpi";
+			}
 			JobExecutor job = new JobExecutor(username, movieFile, "IN_MOVED_TO");
 			job.execute();
 		}

@@ -23,6 +23,8 @@ import org.json.JSONObject;
 
 /**
  * Servlet implementation class PlexWebHook
+ * 
+ * See <a href="https://support.plex.tv/articles/115002267687-webhooks/">https://support.plex.tv/articles/115002267687-webhooks/</a>
  */
 @WebServlet("/PlexWebHook")
 @MultipartConfig
@@ -51,41 +53,48 @@ public class PlexWebHook extends HttpServlet {
 		String jsonString = IOUtils.toString(request.getPart("payload").getInputStream(), Charset.defaultCharset());
 		
 		LOG.info("jsonString=" + jsonString);
-		
-		JSONObject obj = new JSONObject(jsonString);
-		if(obj.getString("event").equals("media.rate")) {
-			JSONObject metadata = obj.getJSONObject("Metadata");
-			String title = metadata.getString("title");
-			LOG.debug(String.format("title=%s", title));
 			
-			File movieFile = findFile(title);
-			if(movieFile == null) {
-				throw new IOException(String.format("Unable to find movie for title=%s", title));
+		try {
+			JSONObject obj = new JSONObject(jsonString);
+			if(obj.getString("event").equals("media.rate")) {
+				JSONObject metadata = obj.getJSONObject("Metadata");
+				String title = metadata.getString("title");
+				LOG.debug(String.format("title=%s", title));
+				
+				File movieFile = findFile(title);
+				if(movieFile == null) {
+					throw new IOException(String.format("Unable to find movie for title=%s", title));
+				}
+				LOG.debug("movieFile=" + movieFile);
+				File skipFile = new File(movieFile.toString().replaceAll("\\.mp4", ".skip"));
+				LOG.debug("skipFile=" + skipFile);
+				String rating = obj.getString("rating");
+				if("2".equals(rating)) {
+					// Remove skip
+					skipFile.delete();
+					LOG.info(String.format("%s deleted", skipFile));
+				}
+				else if("10".equals(rating)) {
+					// create skipFile
+					skipFile.createNewFile();
+					LOG.info(String.format("%s created", skipFile));
+				}
+				else {
+					LOG.info("Rating was not 2 or 10, so doing nothing.");
+				}
 			}
-			LOG.debug("movieFile=" + movieFile);
-			File skipFile = new File(movieFile.toString().replaceAll("\\.mp4", ".skip"));
-			LOG.debug("skipFile=" + skipFile);
-			String rating = obj.getString("rating");
-			if("2".equals(rating)) {
-				// Remove skip
-				skipFile.delete();
-				LOG.info(String.format("%s deleted", skipFile));
-			}
-			else if("10".equals(rating)) {
-				// create skipFile
-				skipFile.createNewFile();
-				LOG.info(String.format("%s created", skipFile));
-			}
-			else {
-				LOG.info("Rating was not 2 or 10, so doing nothing.");
-			}
+		}
+		catch(Exception e) {
+			String errorStr = "Unable to process request! jsonString=" + jsonString;
+			LOG.error(errorStr, e);
+			throw new ServletException(errorStr, e);
 		}
 		
 		response.setStatus(200);
 	}
 	
 	private File findFile(String title) throws IOException {
-		String regex = String.format(".*%s.*\\.mp4", title.replaceAll("[()]", "."));
+		String regex = String.format(".*%s.*\\.mp4", title.replaceAll("\\p{Punct}", ".*"));
 		LOG.debug("regex=" + regex);
 		Path source = Paths.get(baseMovieDir);
         Optional<Path> filePath = Files.walk(source).filter(s -> s.toString().matches(regex)).findFirst();

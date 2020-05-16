@@ -33,7 +33,7 @@ public class JobExecutor {
 														SCRIPTDIR + "/plex_video_iwatch.sh",
 														videoFile,
 														event);
-		LOG.debug("ProcessBuilder = " + processBuilder.command());
+		LOG.info("ProcessBuilder = " + processBuilder.command());
 		Process process = processBuilder.start();
         copy(process.getInputStream(), output);
         copy(process.getErrorStream(), error);

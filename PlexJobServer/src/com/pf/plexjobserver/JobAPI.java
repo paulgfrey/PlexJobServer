@@ -66,6 +66,9 @@ public class JobAPI extends HttpServlet {
 		if(hostname.toLowerCase().contains("odroid")) {
 			username = "odroid";
 		}
+		else if(hostname.toLowerCase().contains("atomicpi")) {
+			username = "atomicpi";
+		}
 		LOG.info("file=" + file + ", event=" + event);
 		JobExecutor job = new JobExecutor(username, file, event);
 		try {

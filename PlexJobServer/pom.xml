@@ -6,6 +6,22 @@
 	<artifactId>PlexJobServer</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>war</packaging>
+	<profiles>
+		<profile>
+			<id>qotom</id>
+			<properties>
+				<tomcat-url>http://192.168.1.120:8080/manager/text</tomcat-url>
+				<tomcat-server>qotom</tomcat-server>
+			</properties>
+		</profile>
+		<profile>
+			<id>atomicpi</id>
+			<properties>
+				<tomcat-url>http://192.168.1.164:8080/manager/text</tomcat-url>
+				<tomcat-server>AtomicPi</tomcat-server>
+			</properties>
+		</profile>
+	</profiles>
 	<build>
 		<sourceDirectory>src</sourceDirectory>
 		<resources>
@@ -37,10 +53,17 @@
 				<artifactId>tomcat7-maven-plugin</artifactId>
 				<version>2.2</version>
 				<configuration>
-					<url>http://192.168.1.120:8080/manager/text</url>
-					<server>qotom</server>
+					<url>${tomcat-url}</url>
+					<server>${tomcat-server}</server>
 					<path>/PlexJobServer</path>
 				</configuration>
+				<!-- 
+				<configuration>
+					<url>http://192.168.1.164:8080/manager/text</url>
+					<server>AtomicPi</server>
+					<path>/PlexJobServer</path>
+				</configuration>
+				 -->
 			</plugin>
 		</plugins>
 	</build>
